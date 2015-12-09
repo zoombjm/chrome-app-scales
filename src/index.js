@@ -6,3 +6,12 @@ chrome.app.runtime.onLaunched.addListener( function () {
     }
   } );
 } );
+
+chrome.runtime.onMessageExternal.addListener( ( obj , sender , sendResponse )=> {
+  console.log( obj );
+  console.log( sender );
+  sendResponse( {
+    hello : '收到了'
+  } );
+  return true;
+} );

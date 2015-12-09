@@ -9,5 +9,10 @@
         "./bundle/app.js"
       ]
     }
+  } ,
+  "externally_connectable" : {
+    "matches" : [
+      "*://localhost:*/*"
+    ]
   }
 }
