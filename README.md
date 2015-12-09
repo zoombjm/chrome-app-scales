@@ -10,6 +10,6 @@
 
 项目开发步骤：
 
- 1. 首先我得学会[开发一个 Chrome App](https://crxdoc-zh.appspot.com/apps/first_app)
- 2. 测试看看普通网页能否通过[外部消息传递](https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable)连接到 Chrome App
- 3. [使用 chrome.serial API](https://crxdoc-zh.appspot.com/apps/app_serial) 读取电子秤读数
+ - [x] 学会[开发一个 Chrome App](https://crxdoc-zh.appspot.com/apps/first_app)
+ - [ ] 测试看看普通网页能否通过[外部消息传递](https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable)连接到 Chrome App
+ - [ ] [使用 chrome.serial API](https://crxdoc-zh.appspot.com/apps/app_serial) 读取电子秤读数
