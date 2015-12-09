@@ -1,0 +1,13 @@
+{
+  "name" : "读取电子秤" ,
+  "description" : "读取使用串行接口连接到电脑的电子秤读数。" ,
+  "version" : "0.0.1" ,
+  "manifest_version" : 2 ,
+  "app" : {
+    "background" : {
+      "scripts" : [
+        "./bundle/app.js"
+      ]
+    }
+  }
+}
