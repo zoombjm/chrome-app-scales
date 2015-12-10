@@ -23,8 +23,8 @@
 ## TODOs
 
  + 添加一个方法用于发现并连接至所有设备，而不是目前的仅在安装时才会连接至设备
- + 使用可以双向发送数据的 [Port](https://developer.chrome.com/apps/runtime#method-connect) 进行通信（概念类似于 WebSocket），而不是目前单向的、一次性的 [sendMessage](https://developer.chrome.com/apps/runtime#method-sendMessage)。（概念类似于 XMLHTTPRequest）
  + 电子秤稳定时会不停的发送不变的读数给应用，添加一个检测，当检测到电子秤的读数变化时，就从应用主动发送给网页一个消息。
+
 ## 许可
 
 MIT

@@ -15,17 +15,19 @@
     <script>
       var eid = 'bpdfliajheklejkpfpdfncekafemlbpo'; // 应用 ID，在 chrome://extensions/ 查看
 
-      document.getElementById( 'test' ).addEventListener( 'click' , function () {
-        chrome.runtime.sendMessage( eid , { method : 'snapshot' } , function ( res ) {
-          console.log( res );
-          if ( res.error ) {
-            alert( '获取数据时出错：' + res.error.message );
-          } else {
-            // data 是一个对象，每一个串行端口都对应一条数据
-            var data = res.data;
+      var port = chrome.runtime.connect( eid , { name : 'x' } );
+
+      port.onMessage.addListener( function ( msg ) {
+        switch ( msg.method ) {
+          case 'snapshot':
+            var data = msg.data;
             alert( JSON.stringify( data ) );
-          }
-        } );
+            break;
+        }
+      } );
+
+      document.getElementById( 'test' ).addEventListener( 'click' , function () {
+        port.postMessage( { method : 'snapshot' } );
       } );
     </script>
   </body>
