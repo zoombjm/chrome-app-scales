@@ -2,14 +2,24 @@
 
 读取电子秤的 Chrome App。
 
-注意：应用仍处于开发初期阶段。
+## 为什么开发 Scales
 
-## 一点说明
+由于 [Google Chrome 禁用了 NPAPI 插件](https://support.google.com/chrome/answer/6213033?hl=zh-Hans)，大部分原有的浏览器插件都已失效，所以我开发了这个 Chrome App 来读取电子秤读数。
 
-由于 Google Chrome 禁用了 NPAPI 插件，导致项目里的电子秤插件失效了，而 Chrome 扩展程序没法访问操作系统的硬件，所以想到通过 Chrome App 的方式来读取电子秤读数。
+## 如何使用&测试
 
-项目开发步骤：
+ 1. 首先，将你的设备（比如电子秤）连接到电脑
+ 2. 克隆此项目
+ 3. 安装依赖包：`npm i`
+ 4. 生成项目文件：`npm run webpack`
+ 5. 打开 Chrome 浏览器，进入扩展程序页面（或者直接在浏览器中输入 chrome://extensions/），勾选右上角的“开发者模式”，点击出现的“加载未打包的扩展程序”，将路径指向项目中的 `/src` 文件夹。
+ 6. 现在页面上会出现一个名为“读取电子秤”的 Chrome 应用，点击下面的 `background page` 打开后台网页的控制台，控制台已经提供了相关信息。
+ 7. 在 Web 服务器中（例如 IIS）打开项目里的 `/external/connect.html` 文件，点击“打印串行端口数据”按钮。
 
- - [x] 学会[开发一个 Chrome App](https://crxdoc-zh.appspot.com/apps/first_app)。运行 `npm run webpack`，然后在 chrome://extensions/ 载入 `/src` 文件夹
- - [x] 测试看看普通网页能否通过[外部消息传递](https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable)连接到 Chrome App。在 chrome://extensions/ 中查看第一步加载的应用的 id，然后编辑 `/external/connect.html` 中的 `eid` 变量，最后在**本地 web 服务器**中打开这个 html 文件。
- - [ ] [使用 chrome.serial API](https://crxdoc-zh.appspot.com/apps/app_serial) 读取电子秤读数
+## How it works?
+
+应用会在安装后（不是启动时）检测所有连接至电脑的设备并尝试连接，然后会持续接收来自这些设备的数据，并以换行符（\n）作为分隔符，将整行的数据保存下来；当点击“打印串行端口数据”按钮时，就会将这个数据显示出来。
+
+## 许可
+
+MIT
