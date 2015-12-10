@@ -5,13 +5,27 @@
     <title>应用外网页</title>
   </head>
   <body>
-    我使用这个网页测试外部网页能否通过<a target="_blank" href="https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable">外部消息传递</a>连接到应用程序。
+    <p>
+      我使用这个网页测试外部网页能否通过<a target="_blank" href="https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable">外部消息传递</a>连接到应用程序。
+    </p>
+
+    <p>
+      <button id="test">打印串行端口数据</button>
+    </p>
     <script>
       var eid = 'bpdfliajheklejkpfpdfncekafemlbpo'; // 应用 ID，在 chrome://extensions/ 查看
 
-      // 发送一个简单的请求：
-      chrome.runtime.sendMessage( eid , { hello : '收到了吗？' } , function ( response ) {
-        console.log( response );
+      document.getElementById( 'test' ).addEventListener( 'click' , function () {
+        chrome.runtime.sendMessage( eid , { method : 'snapshot' } , function ( res ) {
+          console.log( res );
+          if ( res.error ) {
+            alert( '获取数据时出错：' + res.error.message );
+          } else {
+            // data 是一个对象，每一个串行端口都对应一条数据
+            var data = res.data;
+            alert( JSON.stringify( data ) );
+          }
+        } );
       } );
     </script>
   </body>

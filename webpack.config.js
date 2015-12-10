@@ -1,8 +1,10 @@
 module.exports = {
-  entry : './src/index' ,
+  entry : {
+    background : './src/background/index'
+  } ,
   output : {
     path : './src/bundle' ,
-    filename : 'app.js'
+    filename : '[name].js'
   } ,
   module : {
     loaders : [
