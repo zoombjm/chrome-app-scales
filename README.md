@@ -6,7 +6,7 @@
 
 由于 [Google Chrome 禁用了 NPAPI 插件](https://support.google.com/chrome/answer/6213033?hl=zh-Hans)，大部分原有的浏览器插件都已失效，所以我开发了这个 Chrome App 来读取电子秤读数。
 
-## 如何使用&测试
+## 如何使用及测试
 
  1. 首先，将你的设备（比如电子秤）连接到电脑
  2. 克隆此项目
