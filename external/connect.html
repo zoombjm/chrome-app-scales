@@ -3,17 +3,23 @@
   <head>
     <meta charset="UTF-8">
     <title>应用外网页</title>
+    <style>
+      #input {
+        font-size: 40px;
+        color: red;
+      }
+    </style>
   </head>
   <body>
     <p>
-      我使用这个网页测试外部网页能否通过<a target="_blank" href="https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable">外部消息传递</a>连接到应用程序。
+      这个网页展示了如何在外部网页里读取设备的值。
     </p>
 
     <p>
       <button id="test">打印串行端口数据</button>
     </p>
     <p>
-      电子秤的实时读数：<input type="text" id="input">
+      电子秤的实时读数：<span id="input"></span>
     </p>
     <script>
       var eid = 'bpdfliajheklejkpfpdfncekafemlbpo'; // 应用 ID，在 chrome://extensions/ 查看
@@ -43,7 +49,7 @@
                 switch ( msg.type ) {
                   case 'data change':
                     var data = msg.data;
-                    document.getElementById( 'input' ).value = data.newData;
+                    document.getElementById( 'input' ).textContent = data.newData;
                     break;
                 }
               } );

@@ -52,6 +52,19 @@ function onConnect( port ) {
     } );
   } );
 
+  // 一旦连接至应用就先发送一次串口数据
+  const connectionDataMap = api.getSnapshot();
+  Object.keys( connectionDataMap ).forEach( cId => {
+    port.postMessage( {
+      type : 'data change' ,
+      data : {
+        newData : connectionDataMap[ cId ] ,
+        oldData : '' ,
+        cId : Number( cId )
+      }
+    } );
+  } );
+
   api.onError( info => {
     port.postMessage( {
       type : 'connection error' ,
@@ -103,6 +116,7 @@ function onConnect( port ) {
    * 当连接断开时的处理函数
    */
   function onDisconnect() {
+    console.log( '此连接断开了：' , port );
     ports.splice( ports.indexOf( port ) , 1 );
   }
 }
