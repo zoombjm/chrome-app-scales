@@ -49,7 +49,7 @@ const onErrorCbs = [];
 
 serial.onReceiveError.addListener(
   /**
-   * 接收设备数据产生错误时的回调函数。
+   * 接收设备数据产生错误时的回调函数。产生错误后连接会被暂停，但是它没有提供重新连接的方法，所以直接断开掉。
    * @see https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError
    * @param {Object} info
    * @param {Number} info.connectionId - 连接标识符
@@ -60,7 +60,12 @@ serial.onReceiveError.addListener(
    *                            - "system_error" 发生系统错误，连接可能无法恢复。
    */
   info => {
-    console.error( `此连接接收数据时出错：${info.connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
+    const {connectionId} = info;
+    console.error( `此连接接收数据时出错：${connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
+    console.log( `尝试断开连接${connectionId}...` );
+    serial.disconnect( connectionId , ok => console.log( ok ? '断开成功' : '断开失败' ) );
+    delete data[ connectionId ];
+    delete buffers[ connectionId ];
     onErrorCbs.forEach( f => f( info ) );
   }
 );
@@ -117,7 +122,7 @@ function connect( device ) {
       if ( lastError ) { // todo 判断错误是否是因为应用已连接至设备导致的。这种情况不应该被视为一个错误。
         console.log( '连接到此设备时出错：' , device );
         console.error( lastError );
-        console.log( '通常情况下，这是因为应用已经连接至设备导致的。' );
+        console.log( '通常情况下，这是因为应用已经连接至该设备导致的。' );
         j( lastError );
       } else {
         console.log( '连接到设备：' , device );
