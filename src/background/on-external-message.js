@@ -41,7 +41,7 @@ function onConnect( port ) {
   /**
    * 每当数据发生变化时都传给客户端
    */
-  api.onChange( ( newData , oldData , cId )=> {
+  const removeChange = api.onChange( ( newData , oldData , cId )=> {
     port.postMessage( {
       type : 'data change' ,
       data : {
@@ -65,7 +65,7 @@ function onConnect( port ) {
     } );
   } );
 
-  api.onError( info => {
+  const removeError = api.onError( info => {
     port.postMessage( {
       type : 'connection error' ,
       data : info
@@ -117,6 +117,8 @@ function onConnect( port ) {
    */
   function onDisconnect() {
     console.log( '此连接断开了：' , port );
+    removeChange();
+    removeError();
     ports.splice( ports.indexOf( port ) , 1 );
   }
 }

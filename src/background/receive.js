@@ -145,13 +145,25 @@ const exports = {
   /**
    * 添加 change 回调函数
    * @param {Function} cb
+   * @return {Function} - 一个删除此监听函数的方法
    */
   onChange( cb ) {
     onChangeCbs.push( cb );
+    return ()=> {
+      onChangeCbs.splice( onChangeCbs.indexOf( cb ) , 1 );
+    };
   } ,
 
+  /**
+   * 添加 error 回调函数
+   * @param {Function} cb
+   * @returns {Function} - 一个删除此监听函数的方法
+   */
   onError( cb ) {
     onErrorCbs.push( cb );
+    return ()=> {
+      onErrorCbs.splice( onErrorCbs.indexOf( cb ) , 1 );
+    };
   } ,
 
   /**
