@@ -27,7 +27,7 @@
       <button id="connect">通知应用连接到设备</button>
     </p>
     <script>
-      var eid = 'bpdfliajheklejkpfpdfncekafemlbpo'; // 应用 ID，在 chrome://extensions/ 查看
+      var eid = 'bbkdeoafljnanfgabbifaflcddhmljab'; // 应用 ID
 
       var port = chrome.runtime.connect( eid , { name : 'x' } );
 
@@ -54,6 +54,7 @@
                 var data = msg.data;
                 switch ( msg.type ) {
                   case 'data change':
+                    console.log( '收到来自设备的数据：' , data.newData );
                     document.getElementById( 'input' ).textContent = data.newData;
                     break;
 
@@ -68,6 +69,7 @@
       } );
 
       document.getElementById( 'connect' ).addEventListener( 'click' , function () {
+        console.log( '重新连接至设备' );
         port.postMessage( { action : 'connect all devices' } );
       } );
 
