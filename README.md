@@ -1,5 +1,8 @@
 # Serial Port App
 
+[![dependencies Status](https://img.shields.io/david/lmk123/chrome-app-scales.svg?style=flat-square)](https://david-dm.org/lmk123/chrome-app-scales)
+[![devDependencies Status](https://img.shields.io/david/dev/lmk123/chrome-app-scales.svg?style=flat-square)](https://david-dm.org/lmk123/chrome-app-scales#info=devDependencies)
+
 读取[串行接口](https://zh.wikipedia.org/wiki/串行端口)设备数据的 Chrome App。
 
 ## 为什么开发 Serial Port App
