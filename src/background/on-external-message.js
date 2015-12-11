@@ -85,6 +85,12 @@ function onConnect( port ) {
         response.data = api.getSnapshot();
         break;
 
+      // 通知应用重新连接至所有设备。
+      // 应用无法检测到新设备接入了，所以此时需要手动连接
+      case 'connect all devices':
+        api.connectAll();
+        break;
+
       default:
         response.error = new Error( '不支持命令：' , action );
         break;
