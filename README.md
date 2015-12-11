@@ -1,26 +1,22 @@
-# Scales
+# Serial Port App
 
-读取电子秤的 Chrome App。
+读取[串行接口](https://zh.wikipedia.org/wiki/串行端口)设备数据的 Chrome App。
 
-## 为什么开发 Scales
+## 为什么开发 Serial Port App
 
-由于 [Google Chrome 禁用了 NPAPI 插件](https://support.google.com/chrome/answer/6213033?hl=zh-Hans)，大部分原有的浏览器插件都已失效，所以我开发了这个 Chrome App 来读取电子秤读数。
+公司项目原本使用 Java 开发了一个浏览器插件，用于从网页里读取连接到电脑的电子秤的读数，但由于 [Google Chrome 禁用了 NPAPI 插件](https://support.google.com/chrome/answer/6213033?hl=zh-Hans)，导致这个浏览器插件失效了，所以我开发了这个 Chrome App 来读取电子秤读数。
 
-## 如何使用及测试
+但是，Serial Port App 并不是只能用于电子秤，理论上来说，它能读取所有**使用串行接口**接入到电脑的设备的数据，电子秤只是其中一种。
 
- 1. 首先，将你的设备（比如电子秤）连接到电脑
- 2. 克隆此项目
- 3. 安装依赖包：`npm i`
- 4. 生成项目文件：`npm run webpack`
- 5. 打开 Chrome 浏览器，进入扩展程序页面（或者直接在浏览器中输入 chrome://extensions/），勾选右上角的“开发者模式”，点击出现的“加载未打包的扩展程序”，将路径指向项目中的 `/src` 文件夹。
- 6. 现在页面上会出现一个名为“读取电子秤”的 Chrome 应用，点击下面的 `background page` 打开后台网页的控制台，控制台已经提供了相关信息。
- 7. 在 Web 服务器中（例如 IIS）打开项目里的 `/external/connect.html` 文件，点击“打印串行端口数据”按钮。
+## 如何使用
 
-## How it works?
+不同于其它 Chrome 应用，Serial Port App 没有界面，它使用[外部网页连接](https://developer.chrome.com/apps/manifest/externally_connectable)（[中文](https://crxdoc-zh.appspot.com/apps/manifest/externally_connectable)）让普通网页能与应用通信，从而获取设备的数据。
 
-应用会检测所有连接至电脑的设备并尝试连接，然后会持续接收来自这些设备的数据，并以换行符（\n）作为分隔符，将整行的数据保存下来。
+**但正如文档里所说，只有列在 [manifest.json](https://github.com/lmk123/chrome-app-scales/blob/master/src/manifest.json) 文件里的网站才能连接至应用，所以，你需要告诉我你的网站网址，然后我会加入到 manifest.json 中并重新发布应用。**你也可以 Fork 源码之后生成自己的应用并安装在 Chrome 里使用。
 
-普通网页可以使用 [chrome.runtime.connect](https://developer.chrome.com/apps/runtime#method-connect) 连接至应用，获取设备的整行数据。
+[manifest.json 中的 externally_connectable.matches 属性](https://github.com/lmk123/chrome-app-scales/blob/master/src/manifest.json#L17) 列出了目前能连接到 Serial Port App 的网站。
+
+安装之后，就可以参照 [/external/connect.html](https://github.com/lmk123/chrome-app-scales/blob/master/external/connect.html) 里的代码获取数据了。
 
 ## 许可
 

@@ -1,7 +1,7 @@
 {
-  "name" : "读取电子秤" ,
-  "description" : "读取使用串行接口连接到电脑的电子秤读数。" ,
-  "version" : "0.0.1" ,
+  "name" : "Serial Port App" ,
+  "description" : "让普通网页也能读取使用串行接口接入到电脑的设备的数据，例如电子秤的读数。" ,
+  "version" : "1.0.0" ,
   "manifest_version" : 2 ,
   "permissions" : [
     "serial"
@@ -15,7 +15,11 @@
   } ,
   "externally_connectable" : {
     "matches" : [
-      "*://localhost:*/*"
+      "*://localhost:*/*" ,
+      "*://127.0.0.1:*/*" ,
+      "*://192.168.10.18:*/*" ,
+      "*://*.yi-express.com:*/*" ,
+      "*://*.yi-ex.com:*/*"
     ]
   }
 }
