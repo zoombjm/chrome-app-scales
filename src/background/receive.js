@@ -11,28 +11,52 @@ const buffers = {}; // 用于接收 buffer 的临时数据
  */
 const onChangeCbs = [];
 
-// 只有先连接到设备后，这里才会收到设备传送过来的数据
-serial.onReceive.addListener( info => {
-  const cId = info.connectionId;
-  const receiveString = arrayBufferToString( info.data );
+serial.onReceive.addListener(
+  /**
+   * 数据会源源不断的传送过来。只有先连接到设备后，这里才会收到设备传送过来的数据。
+   * @see https://crxdoc-zh.appspot.com/apps/serial#event-onReceive
+   * @param {Object} info
+   * @param {Number} info.connectionId - 连接标识符
+   * @param {ArrayBuffer} info.data - 接收到的数据
+   */
+  info => {
+    const cId = info.connectionId;
+    const receiveString = arrayBufferToString( info.data );
 
-  // 使用 \n 作为数据分隔符
-  if ( receiveString[ receiveString.length - 1 ] === '\n' ) {
-    let buffer = buffers[ cId ];
-    buffer += receiveString;
+    // 使用 \n 作为数据分隔符
+    if ( receiveString.endsWith( '\n' ) ) {
+      let buffer = buffers[ cId ];
+      buffer += receiveString;
 
-    const newData = buffer.trim();
-    const oldData = data[ cId ];
-    if ( newData !== oldData ) {
-      data[ cId ] = newData;
-      onChangeCbs.forEach( f => f( newData , oldData , cId ) );
+      const newData = buffer.trim();
+      const oldData = data[ cId ];
+      if ( newData !== oldData ) {
+        data[ cId ] = newData;
+        onChangeCbs.forEach( f => f( newData , oldData , cId ) );
+      }
+
+      buffers[ cId ] = '';
+    } else {
+      buffers[ cId ] += receiveString;
     }
+  } );
 
-    buffers[ cId ] = '';
-  } else {
-    buffers[ cId ] += receiveString;
+serial.onReceiveError.addListener(
+  /**
+   * 接收设备数据产生错误时的回调函数。
+   * @see https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError
+   * @param {Object} info
+   * @param {Number} info.connectionId - 连接标识符
+   * @param {String} info.error - 连接标识符，值可能是：
+   *                            - "disconnected" 连接已断开
+   *                            - "timeout" 经过 receiveTimeout 毫秒后仍然未接收到数据。
+   *                            - "device_lost" 设备可能已经从主机断开。
+   *                            - "system_error" 发生系统错误，连接可能无法恢复。
+   */
+  info => {
+    console.error( `此连接接收数据时出错：${info.connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
   }
-} );
+);
 
 // 浏览器打开时，先尝试连接至所有设备
 connectAll();
@@ -83,9 +107,10 @@ function connect( device ) {
   return new Promise( ( r , j )=> {
     serial.connect( device.path , {} , connectionInfo => {
       const {lastError} = chrome.runtime;
-      if ( lastError ) {
+      if ( lastError ) { // todo 判断错误是否是因为应用已连接至设备导致的。这种情况不应该被视为一个错误。
         console.log( '连接到此设备时出错：' , device );
         console.error( lastError );
+        console.log( '通常情况下，这是因为应用已经连接至设备导致的。' );
         j( lastError );
       } else {
         console.log( '连接到设备：' , device );
@@ -130,6 +155,7 @@ const exports = {
   }
 };
 
+// 给控制台抛出一个句柄
 export default window.__api = exports;
 
 /**
