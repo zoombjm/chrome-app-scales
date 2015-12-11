@@ -41,6 +41,12 @@ serial.onReceive.addListener(
     }
   } );
 
+/**
+ * 当接收数据出错时，会执行数组里的函数
+ * @type {Function[]}
+ */
+const onErrorCbs = [];
+
 serial.onReceiveError.addListener(
   /**
    * 接收设备数据产生错误时的回调函数。
@@ -55,6 +61,7 @@ serial.onReceiveError.addListener(
    */
   info => {
     console.error( `此连接接收数据时出错：${info.connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
+    onErrorCbs.forEach( f => f( info ) );
   }
 );
 
@@ -139,8 +146,12 @@ const exports = {
    * 添加 change 回调函数
    * @param {Function} cb
    */
-  watch( cb ) {
+  onChange( cb ) {
     onChangeCbs.push( cb );
+  } ,
+
+  onError( cb ) {
+    onErrorCbs.push( cb );
   } ,
 
   /**

@@ -41,7 +41,7 @@ function onConnect( port ) {
   /**
    * 每当数据发生变化时都传给客户端
    */
-  api.watch( ( newData , oldData , cId )=> {
+  api.onChange( ( newData , oldData , cId )=> {
     port.postMessage( {
       type : 'data change' ,
       data : {
@@ -49,6 +49,13 @@ function onConnect( port ) {
         oldData ,
         cId
       }
+    } );
+  } );
+
+  api.onError( info => {
+    port.postMessage( {
+      type : 'connection error' ,
+      data : info
     } );
   } );
 
