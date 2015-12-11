@@ -12,14 +12,19 @@
   </head>
   <body>
     <p>
-      这个网页展示了如何在外部网页里读取设备的值。
+      这个网页展示了如何在外部网页里读取设备的值。打开 Console 可以查看运行日志。
     </p>
 
     <p>
-      <button id="test">打印串行端口数据</button>
+      <button id="test">打印所有设备的数据</button>
+      ，在 Console 中查看数据
     </p>
     <p>
       电子秤的实时读数：<span id="input"></span>
+    </p>
+    <p>
+      Chrome 能检测到设备断开了，但是不能检测到新设备接入，所以如果是在浏览器启动后再接入了设备，需要通知应用连接一下：<br>
+      <button id="connect">通知应用连接到设备</button>
     </p>
     <script>
       var eid = 'bpdfliajheklejkpfpdfncekafemlbpo'; // 应用 ID，在 chrome://extensions/ 查看
@@ -32,10 +37,10 @@
                * @param {Message} msg
                */
               function ( msg ) {
+                var data = msg.data;
                 switch ( msg.response ) {
                   case 'get snapshot':
-                    var data = msg.data;
-                    alert( JSON.stringify( data ) );
+                    console.log( '目前所有设备的数据为：' , data );
                     break;
                 }
               } );
@@ -46,16 +51,24 @@
                * @param {Message} msg
                */
               function ( msg ) {
+                var data = msg.data;
                 switch ( msg.type ) {
                   case 'data change':
-                    var data = msg.data;
                     document.getElementById( 'input' ).textContent = data.newData;
+                    break;
+
+                  case 'connection error':
+                    console.log( '连接' + data.connectionId + '断开了，原因：' + data.error );
                     break;
                 }
               } );
 
       document.getElementById( 'test' ).addEventListener( 'click' , function () {
         port.postMessage( { action : 'get snapshot' } );
+      } );
+
+      document.getElementById( 'connect' ).addEventListener( 'click' , function () {
+        port.postMessage( { action : 'connect all devices' } );
       } );
 
       /**
