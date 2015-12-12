@@ -10,13 +10,14 @@
     </tr>
   </thead>
   <tbody>
-    <tr v-for="d in devices">
-      <td v-text="d.path"></td>
-      <td v-text="d.displayName"></td>
-      <td v-text="d.vendorId"></td>
-      <td v-text="d.productId"></td>
-      <td v-text="d.connection.id ? '已激活' : '未激活'"></td>
+    <tr v-for="d in ports">
+      <td v-text="d.device.path"></td>
+      <td v-text="d.device.displayName"></td>
+      <td v-text="d.device.vendorId"></td>
+      <td v-text="d.device.productId"></td>
+      <td v-text="d.error ? '未连接或连接错误' : '已连接'"></td>
       <td v-text="d.data"></td>
     </tr>
   </tbody>
 </table>
+<button @click="reload">刷新列表</button>

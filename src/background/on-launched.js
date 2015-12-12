@@ -5,7 +5,7 @@ const {chrome} = window ,
 app.runtime.onLaunched.addListener( function () {
   app.window.create( '/app/index.html' , {
     'bounds' : {
-      'width' : 400 ,
+      'width' : 500 ,
       'height' : 500
     }
   } );

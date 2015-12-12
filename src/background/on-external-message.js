@@ -91,6 +91,7 @@ function onConnect( port ) {
       // data 是一个 hash map，格式为 { 应用到设备的连接 ID : 设备最后可用的数据 }
       case 'get ports':
         response.data = api.getSnapshot();
+        console.log( response.data );
         break;
 
       // 通知应用重新连接至所有设备。

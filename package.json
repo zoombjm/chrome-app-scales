@@ -7,8 +7,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "vue": "^1.0.10",
-    "bootstrap-sass": "^3.3.6"
+    "bootstrap-sass": "^3.3.6",
+    "vue": "^1.0.11-csp"
   },
   "devDependencies": {
     "babel-core": "^6.3.15",
