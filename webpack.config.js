@@ -1,6 +1,11 @@
+const webpack = require( 'webpack' ) ,
+  CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin ,
+  ExtractTextPlugin = require( 'extract-text-webpack-plugin' );
+
 module.exports = {
   entry : {
-    background : './src/background/index'
+    background : './src/background/index' ,
+    app : './src/app/index'
   } ,
   output : {
     path : './src/bundle' ,
@@ -24,9 +29,19 @@ module.exports = {
       {
         test : /\.html$/ ,
         loader : 'vue-html'
+      } ,
+      {
+        test : /\.scss$/ ,
+        loader : ExtractTextPlugin.extract( 'style' , 'css?sourceMap!sass?sourceMap' )
       }
     ]
   } ,
+  plugins : [
+    new ExtractTextPlugin( '[name].css' ) ,
+    new CommonsChunkPlugin( {
+      name : 'commons'
+    } )
+  ] ,
   watch : true ,
   devtool : '#source-map'
 };

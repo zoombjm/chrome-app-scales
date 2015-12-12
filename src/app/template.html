@@ -1,0 +1,22 @@
+<table>
+  <thead>
+    <tr>
+      <th>串口路径</th>
+      <th>设备名称</th>
+      <th>PCI 或 USB 制造商标识符</th>
+      <th>USB 产品标识符</th>
+      <th>当前状态</th>
+      <th>实时数据</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="d in devices">
+      <td v-text="d.path"></td>
+      <td v-text="d.displayName"></td>
+      <td v-text="d.vendorId"></td>
+      <td v-text="d.productId"></td>
+      <td v-text="d.connection.id ? '已激活' : '未激活'"></td>
+      <td v-text="d.data"></td>
+    </tr>
+  </tbody>
+</table>
