@@ -10,6 +10,34 @@ chrome.runtime.onConnect.addListener( onConnect );
 const ports = [];
 
 /**
+ * 每当数据发生变化时都传给客户端
+ */
+api.onChange( ( newData , oldData , serialPort )=> {
+  ports.forEach( port => {
+    port.postMessage( {
+      type : 'data change' ,
+      data : {
+        newData ,
+        oldData ,
+        serialPort
+      }
+    } );
+  } );
+} );
+
+/**
+ * 当连接出错时也发送给客户端
+ */
+api.onError( serialPort => {
+  ports.forEach( port => {
+    port.postMessage( {
+      type : 'connection error' ,
+      data : serialPort
+    } );
+  } );
+} );
+
+/**
  * 处理从网页到应用内的连接。
  *
  * 网页连接至应用内：
@@ -35,43 +63,9 @@ const ports = [];
  * @param {chrome.runtime.Port} port
  */
 function onConnect( port ) {
-  console.log( '收到外部连接请求，连接方：' , port );
+  console.log( '收到连接请求，连接方：' , port );
 
   ports.push( port );
-
-  /**
-   * 每当数据发生变化时都传给客户端
-   */
-  const removeChange = api.onChange( ( newData , oldData , cId )=> {
-    port.postMessage( {
-      type : 'data change' ,
-      data : {
-        newData ,
-        oldData ,
-        cId
-      }
-    } );
-  } );
-
-  // 一旦连接至应用就先发送一次串口数据
-  const connectionDataMap = api.getSnapshot();
-  Object.keys( connectionDataMap ).forEach( cId => {
-    port.postMessage( {
-      type : 'data change' ,
-      data : {
-        newData : connectionDataMap[ cId ] ,
-        oldData : '' ,
-        cId : Number( cId )
-      }
-    } );
-  } );
-
-  const removeError = api.onError( info => {
-    port.postMessage( {
-      type : 'connection error' ,
-      data : info
-    } );
-  } );
 
   port.onMessage.addListener( onMessage );
 
@@ -95,14 +89,14 @@ function onConnect( port ) {
 
       // 获取当前所有设备的数据快照
       // data 是一个 hash map，格式为 { 应用到设备的连接 ID : 设备最后可用的数据 }
-      case 'get snapshot':
+      case 'get ports':
         response.data = api.getSnapshot();
         break;
 
       // 通知应用重新连接至所有设备。
       // 应用无法检测到新设备接入了，所以此时需要手动连接
-      case 'connect all devices':
-        api.connectAll();
+      case 'connect':
+        api.connect();
         break;
 
       default:
@@ -118,8 +112,6 @@ function onConnect( port ) {
    */
   function onDisconnect() {
     console.log( '此连接断开了：' , port );
-    removeChange();
-    removeError();
     ports.splice( ports.indexOf( port ) , 1 );
   }
 }

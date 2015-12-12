@@ -2,8 +2,11 @@ const {chrome} = window ,
   {serial} = chrome ,
   decoder = new TextDecoder();
 
-const data = {}; // 用于保存每个连接的可用数据
-const buffers = {}; // 用于接收 buffer 的临时数据
+/**
+ * 保存所有串口数据
+ * @type {SerialPort[]}
+ */
+const serialPorts = [];
 
 /**
  * 每当可用数据发生变化后，就执行数组里面的函数
@@ -23,21 +26,21 @@ serial.onReceive.addListener(
     const cId = info.connectionId;
     const receiveString = arrayBufferToString( info.data );
 
+    const serialPort = findSerialPortByConnectionId( cId );
+
     // 使用 \n 作为数据分隔符
     if ( receiveString.endsWith( '\n' ) ) {
-      let buffer = buffers[ cId ];
-      buffer += receiveString;
+      const newData = (serialPort.buffer + receiveString).trim();
 
-      const newData = buffer.trim();
-      const oldData = data[ cId ];
+      const {data:oldData} = serialPort;
       if ( newData !== oldData ) {
-        data[ cId ] = newData;
-        onChangeCbs.forEach( f => f( newData , oldData , cId ) );
+        serialPort.data = newData;
+        onChangeCbs.forEach( f => f( newData , oldData , serialPort ) );
       }
 
-      buffers[ cId ] = '';
+      serialPort.buffer = '';
     } else {
-      buffers[ cId ] += receiveString;
+      serialPort.buffer += receiveString;
     }
   } );
 
@@ -61,17 +64,54 @@ serial.onReceiveError.addListener(
    */
   info => {
     const {connectionId} = info;
-    console.error( `此连接接收数据时出错：${connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
+    console.warn( `此连接接收数据时出错：${connectionId}，错误标识符：${info.error}。在 https://crxdoc-zh.appspot.com/apps/serial#event-onReceiveError 查看此错误类型。` );
     console.log( `尝试断开连接${connectionId}...` );
     serial.disconnect( connectionId , ok => console.log( ok ? '断开成功' : '断开失败' ) );
-    delete data[ connectionId ];
-    delete buffers[ connectionId ];
-    onErrorCbs.forEach( f => f( info ) );
+
+    const serialPort = findSerialPortByConnectionId( connectionId );
+    if ( serialPort ) {
+      serialPort.error = info.error;
+      onErrorCbs.forEach( f => f( serialPort ) );
+    } else {
+      console.warn( '奇怪,出错的设备连接没有找到对应的串口数据.' );
+    }
   }
 );
 
 // 浏览器打开时，先尝试连接至所有设备
 connectAll();
+
+/**
+ * 根据设备路径获取串口对象
+ * @param {String} path - 设备路径
+ * @returns {SerialPort|null}
+ */
+function findSerialPortByDevicePath( path ) {
+  let serialPort = null;
+  serialPorts.some( sp  => {
+    if ( sp.device.path === path ) {
+      serialPort = sp;
+      return true;
+    }
+  } );
+  return serialPort;
+}
+
+/**
+ * 根据连接 id 获取串口对象
+ * @param {Number} id
+ * @returns {SerialPort|null}
+ */
+function findSerialPortByConnectionId( id ) {
+  let serialPort = null;
+  serialPorts.some( sp  => {
+    if ( sp.connection.id === id ) {
+      serialPort = sp;
+      return true;
+    }
+  } );
+  return serialPort;
+}
 
 /**
  * 将 ArrayBuffer 转换为 String
@@ -85,52 +125,62 @@ function arrayBufferToString( arrayBuffer ) {
 
 /**
  * 尝试连接到所有可连接的设备。
- * 由于 Chrome 没有将设备与连接关联起来，所以我无从得知获取到的设备是否已经连接过了，可能造成重复连接。
- * @param {Function} [cb] - 每一个连接成功或失败时，都会调用这个回调函数。
- *                          调用格式为 cb( error, connectionInfo, device )。
- *                          error 与 connectionInfo 中必有一个是 null。
+ * @returns {Promise}
  */
-function connectAll( cb ) {
-  if ( !cb ) {
-    cb = ()=> {};
-  }
-  serial.getDevices(
-    /**
-     * 回调函数
-     * @param {Device[]} devices
-     */
-    devices => {
-      console.log( '获取到所有可连接的设备：' , devices );
+function connectAll() {
+  new Promise( resolve=> {
+    serial.getDevices(
+      /**
+       * 回调函数
+       * @param {Device[]} devices
+       */
+      devices => {
+        console.log( '找到这些设备：' , devices );
 
-      // 尝试连接到所有设备
-      devices.forEach( device => connect( device ).then(
-        connectionInfo => cb( null , connectionInfo , device ) ,
-        error => cb( error , null , device )
-      ) );
-    } );
+        // 尝试连接到所有设备
+        Promise.all( devices.map( connect ) ).then( resolve );
+      } );
+  } );
 }
 
 /**
- * 连接到某个设备
+ * 连接到单个设备
  * @param {Device} device
  * @returns {Promise}
  */
 function connect( device ) {
-  return new Promise( ( r , j )=> {
-    serial.connect( device.path , {} , connectionInfo => {
-      const {lastError} = chrome.runtime;
-      if ( lastError ) { // todo 判断错误是否是因为应用已连接至设备导致的。这种情况不应该被视为一个错误。
-        console.log( '连接到此设备时出错：' , device );
-        console.error( lastError );
-        console.log( '通常情况下，这是因为应用已经连接至该设备导致的。' );
-        j( lastError );
+  return new Promise( ( resolve )=> {
+    const {path} = device;
+    const serialPort = findSerialPortByDevicePath( path );
+
+    if ( serialPort ) {
+      if ( serialPort.error ) { // 若上次连接时出错,则此次将它从连接列表中删除,重新连接
+        serialPorts.splice( serialPorts.indexOf( serialPort ) , 1 );
       } else {
-        console.log( '连接到设备：' , device );
-        console.log( '连接信息：' , connectionInfo );
-        const cId = connectionInfo.connectionId;
-        data[ cId ] = buffers[ cId ] = '';
-        r( connectionInfo );
+        console.log( '已连接至此设备,将不会重复连接.' , serialPort );
+        resolve( serialPort );
+        return;
       }
+    }
+
+    const newSerialPort = {
+      device
+    };
+
+    serial.connect( path , {} , connection => {
+      const {lastError} = chrome.runtime;
+      if ( lastError ) {
+        newSerialPort.error = lastError;
+
+        console.warn( '无法连接到此设备:' , newSerialPort );
+      } else {
+        newSerialPort.connection = connection;
+        newSerialPort.data = newSerialPort.buffer = '';
+
+        console.log( '已连接到此设备：' , newSerialPort );
+      }
+      serialPorts.push( newSerialPort );
+      resolve( newSerialPort );
     } );
   } );
 }
@@ -138,14 +188,14 @@ function connect( device ) {
 const exports = {
 
   /**
-   * 获取当前接收到的数据快照
-   * @returns {{}}
+   * 获取当前串口的数据快照
+   * @returns {SerialPort[]}
    */
   getSnapshot() {
-    return data;
+    return serialPorts;
   } ,
 
-  connectAll ,
+  connect : connectAll ,
 
   /**
    * 添加 change 回调函数
@@ -169,22 +219,22 @@ const exports = {
     return ()=> {
       onErrorCbs.splice( onErrorCbs.indexOf( cb ) , 1 );
     };
-  } ,
-
-  /**
-   * 连接到某个已知的设备路径
-   * @param {Device.path} devicePath
-   * @returns {Promise}
-   */
-  connect( devicePath ) {
-    return connect( {
-      path : devicePath
-    } );
   }
 };
 
 // 给控制台抛出一个句柄
 export default window.__api = exports;
+
+/**
+ * 使用一种数据结构将串口与串口连接关联起来
+ * @typedef {Object} SerialPort
+ * @property {Device} device
+ * @property {chrome.serial.ConnectionInfo} [connection]
+ * @property {String} [data] - 串口的可用数据
+ * @property {String} [buffer] - 串口的临时 buffer
+ *
+ * @property {Error} [error] - 如果连接时出错,则为错误对象
+ */
 
 /**
  * @see https://crxdoc-zh.appspot.com/apps/serial#method-getDevices
