@@ -1,6 +1,7 @@
 import api from './receive';
 
 chrome.runtime.onConnectExternal.addListener( onConnect );
+chrome.runtime.onConnect.addListener( onConnect );
 
 /**
  * 用一个数组将所有连接都保存起来，用于群发数据
