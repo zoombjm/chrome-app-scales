@@ -1,0 +1,25 @@
+<p>下表列出了当前电脑的串口设备:</p>
+<table>
+  <thead>
+    <tr>
+      <th>串口路径</th>
+      <th>设备名称</th>
+      <th>PCI 或 USB 制造商标识符</th>
+      <th>USB 产品标识符</th>
+      <th>当前状态</th>
+      <th>实时数据</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr v-for="d in ports">
+      <td v-text="d.device.path"></td>
+      <td v-text="d.device.displayName || '无法获取'"></td>
+      <td v-text="d.device.vendorId || '无法获取'"></td>
+      <td v-text="d.device.productId || '无法获取'"></td>
+      <td v-text="d.error ? '未连接或连接错误' : '已连接'"></td>
+      <td v-text="d.data"></td>
+    </tr>
+  </tbody>
+</table>
+<p>接入新设备之后,点击下面的按钮才能接收到新设备的数据:</p>
+<button @click="reload">刷新列表</button>

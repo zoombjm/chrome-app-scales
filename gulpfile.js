@@ -4,7 +4,7 @@ const config = {
   files : {
     html : [ './src/*/index.html' ] ,
     json : [ './src/manifest.json' ] ,
-    copy : [ './src/bundle/*.js' ]
+    copy : [ './src/bundle/*.{js,css}' ]
   }
 };
 
@@ -38,7 +38,6 @@ function clean() {
 function webpackP( done ) {
   webpackConfig.watch = false;
   delete webpackConfig.devtool;
-  webpackConfig.plugins = [];
   webpackConfig.plugins.push( new webpack.optimize.UglifyJsPlugin( {
     compress : {
       warnings : false
