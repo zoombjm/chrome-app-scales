@@ -81,6 +81,7 @@ function onConnect( port ) {
 
         // 通知应用重新连接至所有设备。
         // 应用无法检测到新设备接入了，所以此时需要手动连接
+        // todo 其中一个客户端触发此命令后，结果应该要返回给所有客户端
         case 'connect':
           msg.type = 'ports';
           try {
