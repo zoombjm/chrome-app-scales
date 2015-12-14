@@ -49,7 +49,7 @@ const app = new Vue( {
             const {path} = data.device;
             this.ports.some( ( sp , i , a ) => {
               if ( sp.device.path === path ) {
-                a.splice( i , 1 , data );
+                a.splice( i , 1 , data ); // 这里不能用 sp.error = data.error，否则模板没反应
                 return true;
               }
             } );

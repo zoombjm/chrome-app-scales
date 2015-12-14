@@ -179,9 +179,7 @@ function connect( device ) {
     }
 
     const newSerialPort = serialPort || {
-        device ,
-        error : null ,
-        connection : null
+        device
       };
 
     serial.connect( path , {} , connection => {
