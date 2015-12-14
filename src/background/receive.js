@@ -171,8 +171,6 @@ function connect( device ) {
       if ( serialPort.error ) { // 若上次连接时出错,则重置它的状态
         delete serialPort.error;
         delete serialPort.connection;
-        delete serialPort.buffer;
-        delete serialPort.data;
       } else {
         console.log( '已连接至此设备,将不会重复连接.' , serialPort );
         resolve( serialPort );
@@ -181,7 +179,9 @@ function connect( device ) {
     }
 
     const newSerialPort = serialPort || {
-        device
+        device ,
+        error : null ,
+        connection : null
       };
 
     serial.connect( path , {} , connection => {

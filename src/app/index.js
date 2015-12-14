@@ -9,10 +9,12 @@ const app = new Vue( {
   replace : false ,
   template ,
   data : {
-    ports : []
+    ports : [] ,
+    connecting : false
   } ,
   methods : {
     reload() {
+      this.connecting = true;
       port.postMessage( {
         action : 'connect'
       } );
@@ -26,10 +28,14 @@ const app = new Vue( {
        */
       msg => {
         console.log( '收到消息：' , msg );
-        const {data} = msg;
+        const {data,error} = msg;
+        if ( error ) {
+          return;
+        }
         switch ( msg.type ) {
           case 'ports':
             this.ports = data;
+            this.connecting = false;
             break;
 
           case 'data change':
