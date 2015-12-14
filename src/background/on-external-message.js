@@ -10,6 +10,13 @@ chrome.runtime.onConnect.addListener( onConnect );
 const ports = [];
 
 /**
+ * 每当客户端发送 connect 命令时，后台都会尝试重新连接至所有设备，但是这是一个异步操作；
+ * 在操作完成前如果再次接收到这个命令，那应该不做任何操作
+ * @type {boolean}
+ */
+let connecting = false;
+
+/**
  * 每当数据发生变化时都传给客户端
  */
 api.onChange( ( newData , oldData , serialPort )=> {
@@ -67,52 +74,58 @@ function onConnect( port ) {
 
   ports.push( port );
 
-  port.onMessage.addListener( onMessage );
+  port.onMessage.addListener(
+    /**
+     * 接收到消息的处理函数
+     * @param msg
+     * @param {String} msg.action - 客户端命令
+     */
+    async msg => {
+      const {action} = msg ,
+        response = {
+          response : action
+        };
 
-  port.onDisconnect.addListener( onDisconnect );
+      console.log( '收到外部发送过来的消息，发送方：' , port );
+      console.log( '收到的消息是：' , msg );
 
-  /**
-   * 接收到消息的处理函数
-   * @param msg
-   * @param {String} msg.action - 客户端命令
-   */
-  function onMessage( msg ) {
-    const {action} = msg ,
-      response = {
-        response : action
-      };
+      switch ( action ) {
 
-    console.log( '收到外部发送过来的消息，发送方：' , port );
-    console.log( '收到的消息是：' , msg );
+        // 获取当前所有设备的数据快照
+        // data 是一个 hash map，格式为 { 应用到设备的连接 ID : 设备最后可用的数据 }
+        case 'get ports':
+          response.data = api.getSnapshot();
+          break;
 
-    switch ( action ) {
+        // 通知应用重新连接至所有设备。
+        // 应用无法检测到新设备接入了，所以此时需要手动连接
+        case 'connect':
+          if ( connecting ) {
+            console.log( '后台正在连接至所有设备，此次命令将不会做任何操作。' );
+            return;
+          }
+          connecting = true;
+          response.data = await api.connectAll();
+          connecting = false;
+          response.response = 'get ports';
+          break;
 
-      // 获取当前所有设备的数据快照
-      // data 是一个 hash map，格式为 { 应用到设备的连接 ID : 设备最后可用的数据 }
-      case 'get ports':
-        response.data = api.getSnapshot();
-        console.log( response.data );
-        break;
+        default:
+          response.error = new Error( '不支持命令：' , action );
+          break;
+      }
 
-      // 通知应用重新连接至所有设备。
-      // 应用无法检测到新设备接入了，所以此时需要手动连接
-      case 'connect':
-        api.connect();
-        break;
+      console.log( '返回的数据为：' , response.data );
+      port.postMessage( response );
+    } );
 
-      default:
-        response.error = new Error( '不支持命令：' , action );
-        break;
-    }
+  port.onDisconnect.addListener(
+    /**
+     * 当连接断开时的处理函数
+     */
+    ()=> {
+      console.log( '此连接断开了：' , port );
+      ports.splice( ports.indexOf( port ) , 1 );
+    } );
 
-    port.postMessage( response );
-  }
-
-  /**
-   * 当连接断开时的处理函数
-   */
-  function onDisconnect() {
-    console.log( '此连接断开了：' , port );
-    ports.splice( ports.indexOf( port ) , 1 );
-  }
 }

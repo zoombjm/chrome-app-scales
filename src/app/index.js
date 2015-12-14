@@ -1,5 +1,5 @@
+import 'babel-polyfill';
 import Vue from 'vue';
-
 import template from './template.html';
 
 const port = chrome.runtime.connect( { name : 'app' } );
@@ -14,7 +14,7 @@ const app = new Vue( {
   methods : {
     reload() {
       port.postMessage( {
-        action : 'get ports'
+        action : 'connect'
       } );
     }
   } ,
@@ -28,6 +28,7 @@ const app = new Vue( {
         const {data} = msg;
         switch ( msg.response ) {
           case 'get ports':
+            console.log( '收到端口对象' , data );
             this.ports = data;
             break;
         }
@@ -48,10 +49,10 @@ const app = new Vue( {
             }
             break;
           case 'connection error':
-            const {path} = data.serialPort.device;
-            this.ports.some( ( sp , i , a )  => {
+            const {path} = data.device;
+            this.ports.some( ( sp , i , a ) => {
               if ( sp.device.path === path ) {
-                a[ i ] = data.serialPort;
+                a.splice( i , 1 , data );
                 return true;
               }
             } );
@@ -59,7 +60,9 @@ const app = new Vue( {
         }
       } );
 
-    this.reload();
+    port.postMessage( {
+      action : 'get ports'
+    } );
   }
 } );
 

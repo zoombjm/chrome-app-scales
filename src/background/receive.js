@@ -27,6 +27,10 @@ serial.onReceive.addListener(
     const receiveString = arrayBufferToString( info.data );
 
     const serialPort = findSerialPortByConnectionId( cId );
+    if ( !serialPort ) {
+      console.warn( '在接收数据时没有找到对应的串口。' );
+      return;
+    }
 
     // 使用 \n 作为数据分隔符
     if ( receiveString.endsWith( '\n' ) ) {
@@ -105,7 +109,7 @@ function findSerialPortByDevicePath( path ) {
 function findSerialPortByConnectionId( id ) {
   let serialPort = null;
   serialPorts.some( sp  => {
-    if ( sp.connection.id === id ) {
+    if ( sp.connection.connectionId === id ) {
       serialPort = sp;
       return true;
     }
@@ -128,7 +132,7 @@ function arrayBufferToString( arrayBuffer ) {
  * @returns {Promise}
  */
 function connectAll() {
-  new Promise( resolve=> {
+  return new Promise( resolve => {
     serial.getDevices(
       /**
        * 回调函数
@@ -138,7 +142,7 @@ function connectAll() {
         console.log( '找到这些设备：' , devices );
 
         // 尝试连接到所有设备
-        Promise.all( devices.map( connect ) ).then( resolve );
+        Promise.all( devices.map( connect ) ).then( ()=> resolve( getSnapshot() ) );
       } );
   } );
 }
@@ -149,13 +153,16 @@ function connectAll() {
  * @returns {Promise}
  */
 function connect( device ) {
-  return new Promise( ( resolve )=> {
+  return new Promise( resolve => {
     const {path} = device;
     const serialPort = findSerialPortByDevicePath( path );
 
     if ( serialPort ) {
-      if ( serialPort.error ) { // 若上次连接时出错,则此次将它从连接列表中删除,重新连接
-        serialPorts.splice( serialPorts.indexOf( serialPort ) , 1 );
+      if ( serialPort.error ) { // 若上次连接时出错,则重置它的状态
+        delete serialPort.error;
+        delete serialPort.connection;
+        delete serialPort.buffer;
+        delete serialPort.data;
       } else {
         console.log( '已连接至此设备,将不会重复连接.' , serialPort );
         resolve( serialPort );
@@ -163,39 +170,41 @@ function connect( device ) {
       }
     }
 
-    const newSerialPort = {
-      device
-    };
+    const newSerialPort = serialPort || {
+        device
+      };
 
     serial.connect( path , {} , connection => {
       const {lastError} = chrome.runtime;
       if ( lastError ) {
         newSerialPort.error = lastError;
-
         console.warn( '无法连接到此设备:' , newSerialPort );
       } else {
         newSerialPort.connection = connection;
         newSerialPort.data = newSerialPort.buffer = '';
-
         console.log( '已连接到此设备：' , newSerialPort );
       }
-      serialPorts.push( newSerialPort );
+      if ( !serialPort ) {
+        serialPorts.push( newSerialPort );
+      }
       resolve( newSerialPort );
     } );
   } );
 }
 
-const exports = {
+/**
+ * 获取当前串口的数据快照
+ * @returns {SerialPort[]}
+ */
+function getSnapshot() {
+  return serialPorts;
+}
 
-  /**
-   * 获取当前串口的数据快照
-   * @returns {SerialPort[]}
-   */
-  getSnapshot() {
-    return serialPorts;
-  } ,
+const api = {
 
-  connect : connectAll ,
+  getSnapshot ,
+
+  connectAll ,
 
   /**
    * 添加 change 回调函数
@@ -223,7 +232,7 @@ const exports = {
 };
 
 // 给控制台抛出一个句柄
-export default window.__api = exports;
+export default window.__api = api;
 
 /**
  * 使用一种数据结构将串口与串口连接关联起来
