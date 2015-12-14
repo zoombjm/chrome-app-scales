@@ -44,14 +44,7 @@ api.onError( serialPort => {
  *   const port = chrome.runtime.connect('这里填写应用的 ID',{name:'随便一个名字'});
  *
  * 网页传递消息给应用：
- *   port.postMessage({ action:'这里是命令名称', data:'这里是任意数据' });
- *
- * 网页获取应用对消息的处理结果：
- *   port.onMessage.addListener( msg => {
- *     if( msg.response === '这里是命令名称' ) {
- *       console.log( '方法返回的结果：' , msg.data);
- *     }
- *   });
+ *   port.postMessage({ action:'这里是命令名称' });
  *
  * 网页接收来自应用的消息：
  *  port.onMessage.addListener( msg => {
@@ -70,45 +63,41 @@ function onConnect( port ) {
   port.onMessage.addListener(
     /**
      * 接收到消息的处理函数
-     * @param msg
+     * @param {Object} msg
      * @param {String} msg.action - 客户端命令
      */
     async msg => {
-      const {action} = msg ,
-        response = {
-          response : action
-        };
-
       console.log( '收到外部发送过来的消息，发送方：' , port );
       console.log( '收到的消息是：' , msg );
 
-      switch ( action ) {
+      switch ( msg.action ) {
 
         // 获取当前所有设备的数据快照
         // data 是一个 hash map，格式为 { 应用到设备的连接 ID : 设备最后可用的数据 }
         case 'get ports':
-          response.data = api.getSnapshot();
+          msg.type = 'ports';
+          msg.data = api.getSnapshot();
           break;
 
         // 通知应用重新连接至所有设备。
         // 应用无法检测到新设备接入了，所以此时需要手动连接
         case 'connect':
+          msg.type = 'ports';
           try {
-            response.data = await api.connectAll();
+            msg.data = await api.connectAll();
           }
           catch ( e ) {
-            response.error = e;
+            msg.error = e;
           }
-          response.response = 'get ports';
           break;
 
         default:
-          response.error = new Error( '不支持命令：' , action );
+          msg.error = new Error( '不支持命令：' , action );
           break;
       }
 
-      console.log( '返回的数据为：' , response.data );
-      port.postMessage( response );
+      console.log( '返回的数据为：' , msg );
+      port.postMessage( msg );
     } );
 
   port.onDisconnect.addListener(

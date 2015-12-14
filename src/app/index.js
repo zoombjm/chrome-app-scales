@@ -21,33 +21,24 @@ const app = new Vue( {
   created() {
     port.onMessage.addListener(
       /**
-       * 这个回调函数处理应用回应客户端传递的消息
-       * @param {Message} msg
-       */
-      msg => {
-        const {data} = msg;
-        switch ( msg.response ) {
-          case 'get ports':
-            console.log( '收到端口对象' , data );
-            this.ports = data;
-            break;
-        }
-      } );
-
-    port.onMessage.addListener(
-      /**
        * 这个回调函数处理由应用主动推送过来的消息
        * @param {Message} msg
        */
       msg => {
+        console.log( '收到消息：' , msg );
         const {data} = msg;
         switch ( msg.type ) {
+          case 'ports':
+            this.ports = data;
+            break;
+
           case 'data change':
             const sp = findSerialPortByDevicePath( data.serialPort.device.path );
             if ( sp ) {
               sp.data = data.newData;
             }
             break;
+
           case 'connection error':
             const {path} = data.device;
             this.ports.some( ( sp , i , a ) => {
