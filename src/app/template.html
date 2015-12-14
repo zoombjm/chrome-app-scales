@@ -16,7 +16,7 @@
       <td v-text="d.device.displayName || '无法获取'"></td>
       <td v-text="d.device.vendorId || '无法获取'"></td>
       <td v-text="d.device.productId || '无法获取'"></td>
-      <td v-text="d.error ? '未连接或连接错误' : '已连接'"></td>
+      <td v-text="d.error ? '连接错误' : '已连接'"></td>
       <td v-text="d.data"></td>
     </tr>
   </tbody>

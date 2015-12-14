@@ -10,13 +10,6 @@ chrome.runtime.onConnect.addListener( onConnect );
 const ports = [];
 
 /**
- * 每当客户端发送 connect 命令时，后台都会尝试重新连接至所有设备，但是这是一个异步操作；
- * 在操作完成前如果再次接收到这个命令，那应该不做任何操作
- * @type {boolean}
- */
-let connecting = false;
-
-/**
  * 每当数据发生变化时都传给客户端
  */
 api.onChange( ( newData , oldData , serialPort )=> {
@@ -100,13 +93,12 @@ function onConnect( port ) {
         // 通知应用重新连接至所有设备。
         // 应用无法检测到新设备接入了，所以此时需要手动连接
         case 'connect':
-          if ( connecting ) {
-            console.log( '后台正在连接至所有设备，此次命令将不会做任何操作。' );
-            return;
+          try {
+            response.data = await api.connectAll();
           }
-          connecting = true;
-          response.data = await api.connectAll();
-          connecting = false;
+          catch ( e ) {
+            response.error = e;
+          }
           response.response = 'get ports';
           break;
 

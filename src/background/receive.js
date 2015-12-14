@@ -127,12 +127,19 @@ function arrayBufferToString( arrayBuffer ) {
   return decoder.decode( arrayBuffer );
 }
 
+let connecting = false;
 /**
  * 尝试连接到所有可连接的设备。
+ * 为了防止正在连接中时调用此函数，所以设了一个 connecting 标志位。
  * @returns {Promise}
  */
 function connectAll() {
-  return new Promise( resolve => {
+  return new Promise( ( resolve , reject ) => {
+    if ( connecting ) {
+      reject( '正在重连设备中……' );
+      return;
+    }
+    connecting = true;
     serial.getDevices(
       /**
        * 回调函数
@@ -142,7 +149,10 @@ function connectAll() {
         console.log( '找到这些设备：' , devices );
 
         // 尝试连接到所有设备
-        Promise.all( devices.map( connect ) ).then( ()=> resolve( getSnapshot() ) );
+        Promise.all( devices.map( connect ) ).then( ()=> {
+          connecting = false;
+          resolve( getSnapshot() );
+        } );
       } );
   } );
 }
@@ -177,7 +187,7 @@ function connect( device ) {
     serial.connect( path , {} , connection => {
       const {lastError} = chrome.runtime;
       if ( lastError ) {
-        newSerialPort.error = lastError;
+        newSerialPort.error = lastError.message;
         console.warn( '无法连接到此设备:' , newSerialPort );
       } else {
         newSerialPort.connection = connection;
@@ -200,7 +210,7 @@ function getSnapshot() {
   return serialPorts;
 }
 
-const api = {
+const api = window.__api = {
 
   getSnapshot ,
 
@@ -232,7 +242,7 @@ const api = {
 };
 
 // 给控制台抛出一个句柄
-export default window.__api = api;
+export default api;
 
 /**
  * 使用一种数据结构将串口与串口连接关联起来
