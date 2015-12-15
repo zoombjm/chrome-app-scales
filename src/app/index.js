@@ -2,7 +2,8 @@ import 'babel-polyfill';
 import Vue from 'vue';
 import template from './template.html';
 
-const port = chrome.runtime.connect( { name : 'app' } );
+const {runtime} = chrome;
+const port = runtime.connect( runtime.id || 'bbkdeoafljnanfgabbifaflcddhmljab' , { name : 'app' } );
 
 const app = new Vue( {
   el : 'body' ,
