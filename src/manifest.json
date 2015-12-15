@@ -1,7 +1,7 @@
 {
   "name" : "Serial Port App" ,
   "description" : "让普通网页也能读取使用串行接口接入到电脑的设备的数据，例如电子秤的读数。" ,
-  "version" : "1.0.0" ,
+  "version" : "1.0.1" ,
   "manifest_version" : 2 ,
   "permissions" : [
     "serial"
