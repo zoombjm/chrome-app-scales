@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import Client from 'connect.io-client';
 import Vue from 'vue';
 import template from './template.html';

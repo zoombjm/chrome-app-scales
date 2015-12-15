@@ -26,15 +26,13 @@ server.on( 'connect' , connection => {
 
   connection.emit( 'serial ports' , api.getSnapshot() );
 
-  connection.on( 'reconnect' , async ( data , sendResponse )=> {
+  connection.on( 'reconnect' , ( data , sendResponse )=> {
     console.log( '收到客户端的重新连接请求：' , data );
-    try {
-      await api.connectAll();
+    api.connectAll().then( ()=> {
       server.emit( 'serial ports' , api.getSnapshot() );
       sendResponse();
-    }
-    catch ( e ) {
+    } , e => {
       sendResponse( e );
-    }
+    } );
   } );
 } );
