@@ -18,8 +18,7 @@ module.exports = {
 
         // 有些模块我使用了源码而非编译好的代码，所以这些模块也要用 babel 转换一下。
         // 在下面的括号中使用竖线 | 分隔开要使用 babel 处理的 npm 包名
-        //exclude : /node_modules(?!(\/|\\?\\)(vue-strap)\1)/ ,
-        exclude : /node_modules/ ,
+        exclude : /node_modules(?!(\/|\\?\\)(connect\.io|connect\.io-client)\1)/ ,
         loader : 'babel' ,
         query : {
           presets : [ 'es2015' , 'stage-3' ] ,

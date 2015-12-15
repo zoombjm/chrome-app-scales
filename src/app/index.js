@@ -1,9 +1,7 @@
 import 'babel-polyfill';
+import Client from 'connect.io-client';
 import Vue from 'vue';
 import template from './template.html';
-
-const {runtime} = chrome;
-const port = runtime.connect( runtime.id || 'bbkdeoafljnanfgabbifaflcddhmljab' , { name : 'app' } );
 
 const app = new Vue( {
   el : 'body' ,
@@ -16,50 +14,37 @@ const app = new Vue( {
   methods : {
     reload() {
       this.connecting = true;
-      port.postMessage( {
-        action : 'connect'
+      this._client.emit( 'reconnect' , ()=> {
+        console.log( '重新连接至串口完毕' );
+        this.connecting = false;
       } );
     }
   } ,
   created() {
-    port.onMessage.addListener(
-      /**
-       * 这个回调函数处理由应用主动推送过来的消息
-       * @param {Message} msg
-       */
-      msg => {
-        console.log( '收到消息：' , msg );
-        const {data,error} = msg;
-        if ( error ) {
-          return;
-        }
-        switch ( msg.type ) {
-          case 'ports':
-            this.ports = data;
-            this.connecting = false;
-            break;
+    const client = this._client = new Client();
 
-          case 'data change':
-            const sp = findSerialPortByDevicePath( data.serialPort.device.path );
-            if ( sp ) {
-              sp.data = data.newData;
-            }
-            break;
+    client.on( 'serial ports' , ports => {
+      console.log( '收到服务端发送过来的串口列表：' , ports );
+      this.ports = ports;
+    } );
 
-          case 'connection error':
-            const {path} = data.device;
-            this.ports.some( ( sp , i , a ) => {
-              if ( sp.device.path === path ) {
-                a.splice( i , 1 , data ); // 这里不能用 sp.error = data.error，否则模板没反应
-                return true;
-              }
-            } );
-            break;
+    client.on( 'connection error' , serialPort => {
+      console.log( '收到服务端发送过来的串口错误事件：' , serialPort );
+      const {path} = serialPort.device;
+      this.ports.some( ( sp , i , a ) => {
+        if ( sp.device.path === path ) {
+          a.splice( i , 1 , serialPort ); // 这里不能用 sp.error = data.error，否则模板没反应
+          return true;
         }
       } );
+    } );
 
-    port.postMessage( {
-      action : 'get ports'
+    client.on( 'data change' , data => {
+      console.log( '收到服务端发送过来的串口数据变化事件：' , data );
+      const sp = findSerialPortByDevicePath( data.serialPort.device.path );
+      if ( sp ) {
+        sp.data = data.newData;
+      }
     } );
   }
 } );
