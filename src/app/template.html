@@ -25,4 +25,28 @@
   </tbody>
 </table>
 <p>接入新设备之后,点击下面的按钮才能接收到新设备的数据:</p>
-<button @click="reload">刷新列表</button><span v-show="connecting">正在刷新串口设备……</span>
+<div>
+  <button @click="reload">刷新列表</button>
+  <span v-show="connecting">正在刷新串口设备……</span>
+</div>
+<div>
+  <button @click="chooseUSB">读取 USB 设备的信息</button>
+  <table>
+    <tr>
+      <th>标识符</th>
+      <th>Vendor ID</th>
+      <th>Product ID</th>
+      <th>名称</th>
+      <th>制造商</th>
+      <th>串口数</th>
+    </tr>
+    <tr v-for="d in usbDevices">
+      <td v-text="d.device"></td>
+      <td v-text="d.vendorId"></td>
+      <td v-text="d.productId"></td>
+      <td v-text="d.productName"></td>
+      <td v-text="d.manufacturerName"></td>
+      <td v-text="d.serialNumber"></td>
+    </tr>
+  </table>
+</div>

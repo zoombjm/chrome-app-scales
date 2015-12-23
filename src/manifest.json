@@ -4,7 +4,16 @@
   "version" : "1.0.1" ,
   "manifest_version" : 2 ,
   "permissions" : [
-    "serial"
+    "serial" ,
+    "usb" ,
+    {
+      "usbDevices" : [
+        {
+          "vendorId" : 2338 ,
+          "productId" : 32772
+        }
+      ]
+    }
   ] ,
   "app" : {
     "background" : {

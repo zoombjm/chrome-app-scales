@@ -8,7 +8,8 @@ const app = new Vue( {
   template ,
   data : {
     ports : [] ,
-    connecting : false
+    connecting : false ,
+    usbDevices : []
   } ,
   methods : {
     reload() {
@@ -16,6 +17,17 @@ const app = new Vue( {
       this._client.send( 'reconnect' , true ).then( ()=> {
         console.log( '重新连接至串口完毕' );
         this.connecting = false;
+      } );
+    } ,
+
+    /**
+     * 列出用户选择的 USB 设备的信息
+     */
+    chooseUSB() {
+      chrome.usb.getUserSelectedDevices( { multiple : true } , ( selected_devices )=> {
+        if ( Array.isArray( selected_devices ) ) {
+          this.usbDevices = selected_devices;
+        }
       } );
     }
   } ,
