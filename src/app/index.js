@@ -1,4 +1,4 @@
-import Client from 'connect.io-client';
+import {Client} from 'connect.io';
 import Vue from 'vue';
 import template from './template.html';
 
@@ -13,7 +13,7 @@ const app = new Vue( {
   methods : {
     reload() {
       this.connecting = true;
-      this._client.emit( 'reconnect' , ()=> {
+      this._client.send( 'reconnect' , true ).then( ()=> {
         console.log( '重新连接至串口完毕' );
         this.connecting = false;
       } );
