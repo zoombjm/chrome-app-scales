@@ -1,4 +1,5 @@
 import api from './receive';
+import hidPool from './hid';
 import {Server} from 'connect.io';
 
 const server = new Server();
