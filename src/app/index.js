@@ -14,7 +14,7 @@ const app = new Vue( {
   methods : {
     reload() {
       this.connecting = true;
-      this._client.send( 'reconnect' , true ).then( ()=> {
+      this._client.send( 'serial - reconnect' , true ).then( ()=> {
         console.log( '重新连接至串口完毕' );
         this.connecting = false;
       } );
@@ -34,25 +34,25 @@ const app = new Vue( {
   created() {
     const client = this._client = new Client();
 
-    client.on( 'serial ports' , ports => {
+    client.on( 'serial - devices' , ports => {
       console.log( '收到服务端发送过来的串口列表：' , ports );
       this.ports = ports;
     } );
 
-    client.on( 'connection error' , serialPort => {
+    client.on( 'serial - error' , serialPort => {
       console.log( '收到服务端发送过来的串口错误事件：' , serialPort );
-      const {path} = serialPort.device;
+      const {path} = serialPort.info;
       this.ports.some( ( sp , i , a ) => {
-        if ( sp.device.path === path ) {
+        if ( sp.info.path === path ) {
           a.splice( i , 1 , serialPort ); // 这里不能用 sp.error = data.error，否则模板没反应
           return true;
         }
       } );
     } );
 
-    client.on( 'data change' , data => {
+    client.on( 'serial - data change' , data => {
       console.log( '收到服务端发送过来的串口数据变化事件：' , data );
-      const sp = findSerialPortByDevicePath( data.serialPort.device.path );
+      const sp = findSerialPortByDevicePath( data.serialPort.info.path );
       if ( sp ) {
         sp.data = data.newData;
       }
@@ -63,7 +63,7 @@ const app = new Vue( {
 /**
  * 根据设备路径获取串口对象
  * @param {String} path - 设备路径
- * @returns {SerialPort|null}
+ * @returns {SerialDevice|null}
  */
 function findSerialPortByDevicePath( path ) {
   let serialPort = null;

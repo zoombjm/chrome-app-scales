@@ -1,36 +1,40 @@
-import api from './receive';
-import hidPool from './hid';
+import SerialPool from './serial';
+import HIDPool from './hid';
 import {Server} from 'connect.io';
 
 const server = new Server();
+const hidPool = new HIDPool();
+const serialPool = new SerialPool();
 
 /**
- * 每当数据发生变化时都传给客户端
+ * 每当串口数据发生变化时都传给客户端
  */
-api.onChange( ( newData , oldData , serialPort )=> {
-  server.send( 'data change' , {
+serialPool.on( 'data change' , ( newData , oldData , serialDevice )=> {
+  server.send( 'serial - data change' , {
     newData ,
     oldData ,
-    serialPort
+    serialDevice
   } );
 } );
 
 /**
- * 当连接出错时也发送给客户端
+ * 当串口设备连接出错时也发送给客户端
  */
-api.onError( serialPort => {
-  server.send( 'connection error' , serialPort );
+serialPool.on( 'error' , serialDevice => {
+  server.send( 'serial - error' , serialDevice );
 } );
 
-server.on( 'connect' , connection => {
-  console.log( '收到客户端连接：' , connection );
+server.on( 'connect' , client => {
+  console.log( '收到客户端连接：' , client );
 
-  connection.send( 'serial ports' , api.getSnapshot() );
+  // todo 可能要给 connect.io 加一个命名空间功能
 
-  connection.on( 'reconnect' , ( data , resolve , reject )=> {
+  client.send( 'serial - devices' , serialPool.devices );
+
+  client.on( 'serial - reconnect' , ( data , resolve , reject )=> {
     console.log( '收到客户端的重新连接请求：' , data );
-    api.connectAll().then( ()=> {
-      server.send( 'serial ports' , api.getSnapshot() );
+    client.connectAll().then( ()=> {
+      client.send( 'serial - devices' , serialPool.devices );
       resolve();
     } , e => {
       reject( e );

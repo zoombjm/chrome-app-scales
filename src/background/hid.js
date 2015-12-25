@@ -99,11 +99,11 @@ class HIDPool extends EventEmitter {
    */
   constructor() {
     super();
-    this.hids = [];
+    this.devices = [];
     this.connectingPromise = null; // 不同于单个设备的连接中 Promise，当连接完毕后这个会被设为 null
 
     chrome.hid.onDeviceAdded.addListener( hidDeviceInfo => {
-      this.connect( hidDeviceInfo ).then( device => this.emit( 'usb added' , device ) );
+      this.connect( hidDeviceInfo ).then( device => this.emit( 'hid added' , device ) );
     } );
 
     chrome.hid.onDeviceRemoved.addListener( deviceId => {
@@ -112,7 +112,7 @@ class HIDPool extends EventEmitter {
       if ( device ) {
         device.error = 'removed';
         device.connectingPromise = null;
-        this.emit( 'usb removed' , device );
+        this.emit( 'hid removed' , device );
       }
     } );
 
@@ -160,7 +160,7 @@ class HIDPool extends EventEmitter {
 
     if ( !hidDevice ) {
       hidDevice = new HIDDevice( hidDeviceInfo );
-      this.hids.push( hidDevice );
+      this.devices.push( hidDevice );
     }
     return hidDevice.connect().then( ()=> hidDevice );
   }
@@ -172,7 +172,7 @@ class HIDPool extends EventEmitter {
    */
   findByDeviceId( deviceId ) {
     let d;
-    this.hids.some( ( device )=> {
+    this.devices.some( ( device )=> {
       if ( device.deviceId === deviceId ) {
         d = device;
         return true;
@@ -190,7 +190,7 @@ class HIDPool extends EventEmitter {
    */
   findByVendorAndProductId( { vendorId , productId } ) {
     let d;
-    this.hids.some( ( device )=> {
+    this.devices.some( ( device )=> {
       if ( device.vendorId === vendorId && device.productId === productId ) {
         d = device;
         return true;
@@ -200,5 +200,5 @@ class HIDPool extends EventEmitter {
   }
 }
 
-export default new HIDPool();
+export default HIDPool;
 
