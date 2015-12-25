@@ -3,8 +3,8 @@ import HIDPool from './hid';
 import {Server} from 'connect.io';
 
 const server = new Server();
-const hidPool = new HIDPool();
-const serialPool = new SerialPool();
+const hidPool = window.__hid = new HIDPool();
+const serialPool = window.__serial = new SerialPool();
 
 /**
  * 每当串口数据发生变化时都传给客户端
