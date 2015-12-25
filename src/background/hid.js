@@ -160,6 +160,9 @@ class HIDPool extends EventEmitter {
 
     if ( !hidDevice ) {
       hidDevice = new HIDDevice( hidDeviceInfo );
+      hidDevice.on( 'data' , data => {
+        this.emit( 'data' , data , hidDevice );
+      } );
       this.devices.push( hidDevice );
     }
     return hidDevice.connect().then( ()=> hidDevice );

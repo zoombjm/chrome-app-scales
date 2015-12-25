@@ -94,7 +94,7 @@ class SerialPool extends EventEmitter {
           const {data:oldData} = serialDevice;
           if ( newData !== oldData ) {
             serialDevice.data = newData;
-            serialDevice.emit( 'data' , newData );
+            this.emit( 'data' , newData , serialDevice );
             this.emit( 'data change' , newData , oldData , serialDevice );
           }
 
