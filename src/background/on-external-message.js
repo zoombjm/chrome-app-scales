@@ -33,7 +33,7 @@ server.on( 'connect' , client => {
 
   client.on( 'serial - reconnect' , ( data , resolve , reject )=> {
     console.log( '收到客户端的重新连接请求：' , data );
-    client.connectAll().then( ()=> {
+    serialPool.connectAll().then( ()=> {
       client.send( 'serial - devices' , serialPool.devices );
       resolve();
     } , e => {
