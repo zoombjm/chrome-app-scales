@@ -103,16 +103,20 @@ class HIDPool extends EventEmitter {
     this.connectingPromise = null; // 不同于单个设备的连接中 Promise，当连接完毕后这个会被设为 null
 
     chrome.hid.onDeviceAdded.addListener( hidDeviceInfo => {
+      console.log( '检测到 HID 设备接入：' , hidDeviceInfo );
       this.connect( hidDeviceInfo ).then( device => this.emit( 'hid added' , device ) );
     } );
 
     chrome.hid.onDeviceRemoved.addListener( deviceId => {
       const device = this.findByDeviceId( deviceId );
-
+      console.log( '检测到 HID 设备拔出了' );
       if ( device ) {
         device.error = 'removed';
         device.connectingPromise = null;
         this.emit( 'hid removed' , device );
+        console.log( device );
+      } else {
+        console.warn( '但此 HID 设备不在连接池里。设备 ID：' , deviceId );
       }
     } );
 
@@ -127,7 +131,7 @@ class HIDPool extends EventEmitter {
     if ( this.connectingPromise ) { return this.connectingPromise; }
     return this.connectingPromise = hid.getDevices( {} )
       .then( hidDeviceInfoArray => {
-        console.log( '找到这些 USB 设备：' , hidDeviceInfoArray );
+        console.log( '找到这些 HID 设备：' , hidDeviceInfoArray );
         if ( hidDeviceInfoArray.length ) {
           return Promise.all( hidDeviceInfoArray.map( hidDeviceInfo => this.connect( hidDeviceInfo ) ) );
         }
@@ -164,6 +168,9 @@ class HIDPool extends EventEmitter {
         this.emit( 'data' , data , hidDevice );
       } );
       this.devices.push( hidDevice );
+      console.log( '连接的 HID 设备是一个新设备：' , hidDevice );
+    } else {
+      console.log( '此 HID 设备已连接但断开了，将尝试重新连接。' , hidDevice );
     }
     return hidDevice.connect().then( ()=> hidDevice );
   }
@@ -176,7 +183,7 @@ class HIDPool extends EventEmitter {
   findByDeviceId( deviceId ) {
     let d;
     this.devices.some( ( device )=> {
-      if ( device.deviceId === deviceId ) {
+      if ( device.info.deviceId === deviceId ) {
         d = device;
         return true;
       }
@@ -194,7 +201,8 @@ class HIDPool extends EventEmitter {
   findByVendorAndProductId( { vendorId , productId } ) {
     let d;
     this.devices.some( ( device )=> {
-      if ( device.vendorId === vendorId && device.productId === productId ) {
+      const {info} = device;
+      if ( info.vendorId === vendorId && info.productId === productId ) {
         d = device;
         return true;
       }
