@@ -30,6 +30,7 @@
   <span v-show="connecting">正在刷新串口设备……</span>
 </div>
 <div>
+  <p>当接入 USB 设备时，首先需要把设备的 vendorId 与 productId 填进 manifest.json里，可以通过下面的按钮读取想要接入的 USB 设备的这两个值。</p>
   <button @click="chooseUSB">读取 USB 设备的信息</button>
   <table>
     <tr>
