@@ -2,20 +2,22 @@ import {Client} from 'connect.io';
 import Vue from 'vue';
 import template from './template.html';
 
-const app = new Vue( {
+const client = new Client();
+
+new Vue( {
   el : 'body' ,
   replace : false ,
   template ,
   data : {
-    ports : [] ,
+    devices : null ,
     connecting : false ,
-    usbDevices : []
+    usbDevices : null
   } ,
   methods : {
     reload() {
       this.connecting = true;
-      this._client.send( 'serial - reconnect' , true ).then( ()=> {
-        console.log( '重新连接至串口完毕' );
+      client.send( 'reconnect' , true ).then( ()=> {
+        console.log( '重新连接至设备完毕' );
         this.connecting = false;
       } );
     } ,
@@ -32,46 +34,57 @@ const app = new Vue( {
     }
   } ,
   created() {
-    const client = this._client = new Client();
 
-    client.on( 'serial - devices' , ports => {
-      console.log( '收到服务端发送过来的串口列表：' , ports );
-      this.ports = ports;
+    client.on( 'all devices' , devices => {
+      console.log( '收到服务端发送过来的设备列表：' , devices );
+      this.devices = devices;
     } );
 
-    client.on( 'serial - error' , serialPort => {
-      console.log( '收到服务端发送过来的串口错误事件：' , serialPort );
-      const {path} = serialPort.info;
-      this.ports.some( ( sp , i , a ) => {
-        if ( sp.info.path === path ) {
-          a.splice( i , 1 , serialPort ); // 这里不能用 sp.error = data.error，否则模板没反应
+    client.on( 'device error' , errorDevice => {
+      console.log( '收到服务端发送过来的设备错误事件：' , errorDevice );
+      const {id} = errorDevice;
+      this.devices.some( ( device ) => {
+        if ( device.id === id ) {
+          device.error = errorDevice.error;
           return true;
         }
       } );
     } );
 
-    client.on( 'serial - data change' , data => {
-      console.log( '收到服务端发送过来的串口数据变化事件：' , data );
-      const sp = findSerialPortByDevicePath( data.serialPort.info.path );
-      if ( sp ) {
-        sp.data = data.newData;
+    client.on( 'data change' , ( {newData,device:dataChangedDevice} ) => {
+      console.log( '收到服务端发送过来的数据变化事件：' , newData , dataChangedDevice );
+
+      const {id} = dataChangedDevice;
+
+      this.devices.some( ( device /*, i , a */ ) => {
+        if ( device.id === id ) {
+          device.data = newData;
+          return true;
+        }
+      } );
+    } );
+
+    client.on( 'device added' , ( {device} )=> {
+      const {id} = device;
+      const has = this.devices.some( ( d , i , a )=> {
+        if ( d.id === id ) {
+          a.splice( i , 1 , device );
+          return true;
+        }
+      } );
+      if ( !has ) {
+        this.devices.push( device );
       }
+    } );
+
+    client.on( 'device removed' , ( {device} )=> {
+      const {id} = device;
+      this.devices.some( ( d )=> {
+        if ( d.id === id ) {
+          d.error = '已断开';
+          return true;
+        }
+      } );
     } );
   }
 } );
-
-/**
- * 根据设备路径获取串口对象
- * @param {String} path - 设备路径
- * @returns {SerialDevice|null}
- */
-function findSerialPortByDevicePath( path ) {
-  let serialPort = null;
-  app.ports.some( sp  => {
-    if ( sp.device.path === path ) {
-      serialPort = sp;
-      return true;
-    }
-  } );
-  return serialPort;
-}

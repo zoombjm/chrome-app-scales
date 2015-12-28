@@ -5,7 +5,8 @@ const {chrome} = window ,
   {serial} = chrome;
 
 const serialPromise = cp.serial;
-
+let id = 0;
+const type = 'serial';
 class SerialDevice extends EventEmitter {
 
   /**
@@ -14,7 +15,8 @@ class SerialDevice extends EventEmitter {
    */
   constructor( deviceInfo ) {
     super();
-    this.type = 'serial';
+    this.id = type + id++;
+    this.type = type;
     this.data = '';
     this.buffer = '';
     this.info = deviceInfo;
@@ -38,6 +40,7 @@ class SerialDevice extends EventEmitter {
         this.data = this.buffer = '';
       } , err => {
         this.error = err;
+        this.connectingPromise = null;
         console.warn( '无法连接到此串口设备:' , this );
       } );
   }
@@ -79,7 +82,7 @@ class SerialPool extends EventEmitter {
        */
       info => {
         const cId = info.connectionId;
-        const receiveString = arrayBufferToString( info.data );
+        const receiveString = transformData( info.data );
 
         const serialDevice = this.findByConnectionId( cId );
         if ( !serialDevice ) {
@@ -90,7 +93,7 @@ class SerialPool extends EventEmitter {
         // 使用 \n 作为数据分隔符
         if ( receiveString.endsWith( this.lineBreak ) ) {
           const newData = (serialDevice.buffer + receiveString).trim();
-          this.emit( 'data' , newData , serialDevice );
+          //this.emit( 'data' , newData , serialDevice );
 
           const {data:oldData} = serialDevice;
           if ( newData !== oldData ) {
@@ -123,6 +126,7 @@ class SerialPool extends EventEmitter {
           console.warn( '此设备在接收数据时出错，尝试断开连接：' , serialDevice );
           serialDevice.disconnect();
           serialDevice.error = info.error;
+          serialDevice.connectingPromise = null;
           this.emit( 'error' , serialDevice );
         } else {
           console.warn( '接收数据时出错，但在连接池中找不到此连接：' , connectionId );
@@ -134,7 +138,7 @@ class SerialPool extends EventEmitter {
   }
 
   /**
-   * 连接至所有串口设备
+   * 连接至所有串口设备。
    * @returns {Promise}
    */
   connectAll() {
@@ -216,15 +220,23 @@ class SerialPool extends EventEmitter {
   }
 }
 
-const decoder = new TextDecoder();
+// 默认情况下，串口设备的 ArrayBuffer 是用 utf8 编码的
+const decoder = new TextDecoder( 'utf-8' , { fatal : true } );
 /**
- * 将 ArrayBuffer 转换为 String
+ * 串口数据为一个 ArrayBuffer，为了能将它传递给其他页面（通过 connect.io），需要将 ArrayBuffer 转换为 String。
+ * 注意：不同设备的转换方式可能会不同，但我在两个电子秤上都能用这个方法成功将数据转换为字符串。
  * @see https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode
  * @param {ArrayBuffer} arrayBuffer
  * @returns {string}
  */
-function arrayBufferToString( arrayBuffer ) {
-  return decoder.decode( arrayBuffer );
+function transformData( arrayBuffer ) {
+  try {
+    return decoder.decode( arrayBuffer );
+  }
+  catch ( e ) {
+    console.warn( '解码串口设备发送的数据时出错：' , e , arrayBuffer );
+    return '';
+  }
 }
 
 export default SerialPool;

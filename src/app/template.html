@@ -2,7 +2,7 @@
 <table>
   <thead>
     <tr>
-      <th>串口路径</th>
+      <th>设备标识符</th>
       <th>设备名称</th>
       <th>PCI 或 USB 制造商标识符</th>
       <th>USB 产品标识符</th>
@@ -11,16 +11,16 @@
     </tr>
   </thead>
   <tbody>
-    <tr v-show="ports.length" v-for="d in ports">
-      <td v-text="d.device.path"></td>
-      <td v-text="d.device.displayName || '无法获取'"></td>
-      <td v-text="d.device.vendorId || '无法获取'"></td>
-      <td v-text="d.device.productId || '无法获取'"></td>
-      <td v-text="d.error ? '连接错误' : '已连接'"></td>
+    <tr v-show="devices.length" v-for="d in devices">
+      <td v-text="d.id"></td>
+      <td v-text="d.info.displayName || d.info.productName || '无法获取'"></td>
+      <td v-text="d.info.vendorId || '无法获取'"></td>
+      <td v-text="d.info.productId || '无法获取'"></td>
+      <td v-text="d.error ? '连接错误，可能已断开' : '已连接'"></td>
       <td v-text="d.data"></td>
     </tr>
-    <tr v-show="!ports.length"><!--这里用 v-else 无效-->
-      <td colspan="6">当前没有可用的串口设备</td>
+    <tr v-show="!devices.length"><!--这里用 v-else 无效-->
+      <td colspan="6">当前没有可用的设备</td>
     </tr>
   </tbody>
 </table>

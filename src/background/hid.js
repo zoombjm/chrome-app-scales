@@ -3,6 +3,9 @@ import cp from '../modules/chrome-promise';
 
 const {hid} = cp;
 
+let id = 0;
+const type = 'hid';
+
 class HIDDevice extends EventEmitter {
   /**
    * 封装一下单个 HID 设备对象。
@@ -15,7 +18,8 @@ class HIDDevice extends EventEmitter {
    */
   constructor( hidDeviceInfo ) {
     super();
-    this.type = 'hid';
+    this.id = type + id++;
+    this.type = type;
     this.data = null; // 当连接至设备后，每次读取到的设备的值都会写在这个属性里
     this.connectionId = null;
     this.info = hidDeviceInfo;
@@ -64,7 +68,11 @@ class HIDDevice extends EventEmitter {
    */
   receive() {
     return hid.receive( this.connectionId ).then( r => {
-      this.data = r[ 1 ];
+      const oldData = this.data , newData = r[ 1 ] = this.data = transformData( r[ 1 ] );
+      //this.emit( 'data' , newData );
+      if ( oldData !== newData ) {
+        this.emit( 'data change' , newData , oldData );
+      }
       return r;
     } );
   }
@@ -76,11 +84,10 @@ class HIDDevice extends EventEmitter {
     if ( null === this.connectionId ) {
       throw new Error( '请先连接至设备。' );
     }
-    if ( this.receiving ) {return;}
+    if ( this.receiving ) { return; }
     this.receiving = true;
     const receiveLoop = ()=> {
-      this.receive().then( ( [reportId,data] )=> {
-        this.emit( 'data' , data );
+      this.receive().then( ()=> {
         setTimeout( receiveLoop , this.receiveInterval );
       } , err => {
         this.receiving = false;
@@ -164,8 +171,11 @@ class HIDPool extends EventEmitter {
 
     if ( !hidDevice ) {
       hidDevice = new HIDDevice( hidDeviceInfo );
-      hidDevice.on( 'data' , data => {
-        this.emit( 'data' , data , hidDevice );
+      //hidDevice.on( 'data' , data => {
+      //  this.emit( 'data' , data , hidDevice );
+      //} );
+      hidDevice.on( 'data change' , ( newData , oldData ) => {
+        this.emit( 'data change' , newData , oldData , hidDevice );
       } );
       this.devices.push( hidDevice );
       console.log( '连接的 HID 设备是一个新设备：' , hidDevice );
@@ -193,7 +203,7 @@ class HIDPool extends EventEmitter {
 
   /**
    * 根据 vendorId 与 productId 查找一个设备
-   * @param options
+   * @param {Object} options
    * @param {Number} options.vendorId
    * @param {Number} options.productId
    * @returns {HIDDevice|undefined}
@@ -209,6 +219,16 @@ class HIDPool extends EventEmitter {
     } );
     return d;
   }
+}
+
+/**
+ * HID 设备的 data 虽然是一个 ArrayBuffer，可是无法使用 TextDecoder 转换为字符串；M25 Dymo 电子秤可以将它转换为 Unit8Array 然后里面包含数据。
+ * 注意：不同设备的转换方法可能不同
+ * @param arrayBuffer
+ * @returns {String}
+ */
+function transformData( arrayBuffer ) {
+  return '[' + new Uint8Array( arrayBuffer ).join( ',' ) + ']';
 }
 
 export default HIDPool;
