@@ -17,7 +17,7 @@
 
 **但正如文档里所说，只有列在 [manifest.json](https://github.com/lmk123/chrome-app-scales/blob/master/src/manifest.json) 文件里的网站才能连接至应用，所以，你需要告诉我你的网站网址，然后我会加入到 manifest.json 中并重新发布应用。**你也可以 Fork 源码之后生成自己的应用并安装在 Chrome 里使用。
 
-[manifest.json 中的 externally_connectable.matches 属性](https://github.com/lmk123/chrome-app-scales/blob/master/src/manifest.json#L27-L34)列出了目前能连接到 Serial Port App 的网站。
+[manifest.json 中的 externally_connectable.matches 属性](https://github.com/lmk123/chrome-app-scales/blob/master/src/manifest.json#L27-L35)列出了目前能连接到 Serial Port App 的网站。
 
 安装之后，就可以参照 [/src/app/index.js](https://github.com/lmk123/chrome-app-scales/blob/master/src/app/index.js) 里的代码获取数据了,我以后也会写一份详细的文档来说明其它网站或扩展要如何连接至此应用获取数据的.
 

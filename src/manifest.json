@@ -32,5 +32,6 @@
       "*://*.yi-express.com:*/*" ,
       "*://*.yi-ex.com:*/*"
     ]
-  }
+  } ,
+  "minimum_chrome_version" : "38.0"
 }
