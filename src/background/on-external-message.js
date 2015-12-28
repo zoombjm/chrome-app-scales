@@ -26,9 +26,6 @@ serialPool.on( 'error' , serialDevice => {
 
 server.on( 'connect' , client => {
   console.log( '收到客户端连接：' , client );
-
-  // todo 可能要给 connect.io 加一个命名空间功能
-
   client.send( 'serial - devices' , serialPool.devices );
 
   client.on( 'serial - reconnect' , ( data , resolve , reject )=> {

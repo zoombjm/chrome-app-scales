@@ -90,11 +90,11 @@ class SerialPool extends EventEmitter {
         // 使用 \n 作为数据分隔符
         if ( receiveString.endsWith( this.lineBreak ) ) {
           const newData = (serialDevice.buffer + receiveString).trim();
+          this.emit( 'data' , newData , serialDevice );
 
           const {data:oldData} = serialDevice;
           if ( newData !== oldData ) {
             serialDevice.data = newData;
-            this.emit( 'data' , newData , serialDevice );
             this.emit( 'data change' , newData , oldData , serialDevice );
           }
 
